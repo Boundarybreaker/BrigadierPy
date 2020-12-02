@@ -10,7 +10,9 @@ V = TypeVar('V')
 
 # necessary for type hint linting to understand that the class exists >:(
 class StringRange:
-    pass
+    def __init__(self, start: int, end: int):
+        self.start = start
+        self.end = end
 
 
 class StringRange:
@@ -32,11 +34,10 @@ class StringRange:
 
     @overload
     def get(self, reader: ImmutableStringReader) -> str:
-        return reader.get_string()[self.start, self.end]
+        return reader.get_string()[self.start:self.end]
 
-    @overload
     def get(self, string: str) -> str:
-        return string[self.start, self.end]
+        return string[self.start:self.end]
 
     def is_empty(self):
         return self.start == self.end
@@ -45,16 +46,19 @@ class StringRange:
         return self.end - self.start
 
     def __str__(self):
-        return 'StringRange{start=' + self.start + ', end=' + self.end + '}'
+        return 'StringRange{start=' + str(self.start) + ', end=' + str(self.end) + '}'
 
     def __hash__(self):
-        return hash(self.start, self.end)
+        return hash((self.start, self.end))
 
 
 class ParsedArgument(Generic[S, T]):  # TODO: impl
     def __init__(self, start: int, end: int, result: T):
         self.range = StringRange.between(start, end)
         self.result = result
+
+    def __hash__(self):
+        return hash((self.range, self.result))
 
 
 class ParsedCommandNode(Generic[S]):
@@ -93,7 +97,7 @@ class CommandContext(Generic[S]):
             result = result.child
         return result
 
-    def get_argument(self, name: str, clazz: Type[V]) -> V:  # TODO: how does this work with type hints?
+    def get_argument(self, name: str, clazz: Type[V]) -> V:
         if name not in self.arguments:
             raise KeyError('No such argument \'' + name + '\' exists on this command')
 
